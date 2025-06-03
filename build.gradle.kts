@@ -27,7 +27,6 @@ version = "$apiVersion-$commitHash"
 repositories {
     mavenCentral()
     gradlePluginPortal()
-    mavenLocal()
     maven("https://repo.papermc.io/repository/maven-public/")
     maven("https://repo.viaversion.com")
     maven("https://repo.dmulloy2.net/repository/public")
@@ -61,8 +60,8 @@ tasks.jar {
 }
 
 tasks.shadowJar {
-    archiveClassifier.set("")
-    exclude("io.github.miniplaceholders.*")
+    archiveClassifier.set("") // Use empty string instead of null.
+    exclude("io.github.miniplaceholders.*") // Exclude the MiniPlaceholders package from being shadowed.
     minimize()
 }
 
@@ -89,7 +88,7 @@ tasks.withType<AbstractArchiveTask>().configureEach {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(targetJavaVersion)
+        languageVersion = JavaLanguageVersion.of(17)
         vendor = JvmVendorSpec.GRAAL_VM
     }
 }

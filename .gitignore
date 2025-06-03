@@ -46,6 +46,7 @@ gradle-app.setting
 .project
 # JDT-specific (Eclipse Java Development Tools)
 .classpath
+.settings/
 
 ### Gradle Patch ###
 # Java heap dump
