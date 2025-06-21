@@ -1,21 +1,17 @@
 import java.io.BufferedReader
 
 plugins {
-    kotlin("jvm") version "2.1.21"
-    id("io.papermc.paperweight.userdev") version "2.0.0-beta.17"
-    id("com.gradleup.shadow") version "8.3.6"
-    id("com.diffplug.spotless") version "7.0.4"
-    eclipse
+    kotlin("jvm") version "2.1.21" // Import kotlin jvm plugin for kotlin/java integration.
+    id("com.diffplug.spotless") version "7.0.4" // Import auto-formatter.
+    id("com.gradleup.shadow") version "8.3.6" // Import shadow API.
+    id("io.papermc.paperweight.userdev") version "2.0.0-beta.17" // Import Paperweight userdev API.
+    eclipse // Import eclipse plugin for IDE integration.
 }
 
-val commitHash = Runtime
-    .getRuntime()
-    .exec(arrayOf("git", "rev-parse", "--short=10", "HEAD"))
-    .let { process ->
+val commitHash =
+    Runtime.getRuntime().exec(arrayOf("git", "rev-parse", "--short=10", "HEAD")).let { process ->
         process.waitFor()
-        val output = process.inputStream.use {
-            it.bufferedReader().use(BufferedReader::readText)
-        }
+        val output = process.inputStream.use { it.bufferedReader().use(BufferedReader::readText) }
         process.destroy()
         output.trim()
     }
@@ -23,6 +19,7 @@ val commitHash = Runtime
 val apiVersion = "1.19"
 
 group = "nl.skbotnl.rewindfixog"
+
 version = "$apiVersion-$commitHash"
 
 repositories {
@@ -36,51 +33,39 @@ repositories {
 dependencies {
     paperweight.paperDevBundle("1.19.4-R0.1-SNAPSHOT")
 
-    compileOnly("io.github.miniplaceholders:miniplaceholders-api:2.2.3")
+    compileOnly("io.github.miniplaceholders:miniplaceholders-api:2.2.3") // Import MiniPlaceholders API.
     compileOnly("com.viaversion:viaversion-api:5.0.5")
     compileOnly("com.comphenix.protocol:ProtocolLib:5.1.0")
 }
 
 val targetJavaVersion = 17
-kotlin {
-    jvmToolchain(targetJavaVersion)
-}
+
+kotlin { jvmToolchain(targetJavaVersion) }
 
 paperweight.reobfArtifactConfiguration = io.papermc.paperweight.userdev.ReobfArtifactConfiguration.REOBF_PRODUCTION
 
-tasks.assemble {
-    dependsOn(tasks.reobfJar)
-}
+tasks.assemble { dependsOn(tasks.reobfJar) }
 
 tasks.build {
     dependsOn(tasks.spotlessApply)
     dependsOn(tasks.shadowJar)
 }
 
-tasks.jar {
-    archiveClassifier.set("part")
-}
+tasks.jar { archiveClassifier.set("part") }
 
 tasks.shadowJar {
-    archiveClassifier.set("") // Use empty string instead of null.
     exclude("io.github.miniplaceholders.*") // Exclude the MiniPlaceholders package from being shadowed.
+    archiveClassifier.set("") // Use empty string instead of null.
     minimize()
 }
 
 tasks.named<ProcessResources>("processResources") {
-    val props = mapOf(
-        "version" to version,
-        "apiVersion" to apiVersion,
-    )
+    val props = mapOf("version" to version, "apiVersion" to apiVersion)
     inputs.properties(props)
     filteringCharset = "UTF-8"
-    filesMatching("plugin.yml") {
-        expand(props)
-    }
+    filesMatching("plugin.yml") { expand(props) }
 
-    from("LICENSE") {
-        into("/")
-    }
+    from("LICENSE") { into("/") }
 }
 
 tasks.withType<AbstractArchiveTask>().configureEach {
@@ -96,9 +81,9 @@ java {
 }
 
 spotless {
-    kotlin {
-        ktfmt().kotlinlangStyle().configure {
-            it.setMaxWidth(120)
-        }
+    kotlin { ktfmt().kotlinlangStyle().configure { it.setMaxWidth(120) } }
+    kotlinGradle {
+        ktfmt().kotlinlangStyle().configure { it.setMaxWidth(120) }
+        target("build.gradle.kts", "settings.gradle.kts")
     }
 }
