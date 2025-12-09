@@ -39,12 +39,31 @@ val apiVersion = "1.19" // Declare minecraft server target version.
 
 version = "$apiVersion-$commitHash" // Declare plugin version (will be in .jar).
 
+/* ----------------------------- Resources ----------------------------- */
+tasks.named<ProcessResources>("processResources") {
+    val props = mapOf("version" to version, "apiVersion" to apiVersion)
+    inputs.properties(props) // Indicates to rerun if version changes.
+    filesMatching("plugin.yml") { expand(props) }
+    from("LICENSE") { into("/") } // Bundle licenses into jarfiles.
+}
+
 /* ---------------------------- Repos ---------------------------------- */
 repositories {
     mavenCentral() // Import the Maven Central Maven Repository.
     gradlePluginPortal() // Import the Gradle Plugin Portal Maven Repository.
     maven { url = uri("https://repo.purpurmc.org/snapshots") } // Import the PurpurMC Maven Repository.
     maven("https://repo.viaversion.com") // Import the ViaVersion Maven Repository.
+    maven { url = uri("file://${System.getProperty("user.home")}/.m2/repository") }
+    System.getProperty("SELF_MAVEN_LOCAL_REPO")?.let { // TrueOG Bootstrap mavenLocal().
+        val dir = file(it)
+        if (dir.isDirectory) {
+            println("Using SELF_MAVEN_LOCAL_REPO at: $it")
+            maven { url = uri("file://${dir.absolutePath}") }
+        } else {
+            logger.error("TrueOG Bootstrap not found, defaulting to ~/.m2 for mavenLocal()")
+            mavenLocal()
+        }
+    } ?: logger.error("TrueOG Bootstrap not found, defaulting to ~/.m2 for mavenLocal()")
 }
 
 /* ---------------------- Java project deps ---------------------------- */
@@ -62,6 +81,7 @@ tasks.withType<AbstractArchiveTask>().configureEach { // Ensure reproducible .ja
     isReproducibleFileOrder = true
 }
 
+/* ------------------- Paperweight boilerplate ------------------------- */
 paperweight.reobfArtifactConfiguration = io.papermc.paperweight.userdev.ReobfArtifactConfiguration.REOBF_PRODUCTION
 
 tasks.assemble { dependsOn(tasks.reobfJar) }
